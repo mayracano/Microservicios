@@ -8,6 +8,7 @@ import com.example.library.service.BookService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -111,15 +112,15 @@ public class BookControllerTest {
         bookToUpdate.setEditorial("Editorial 2");
         bookToUpdate.setIsbn("0123456789");
 
-        given(bookService.updateBook(bookToUpdate,bookToUpdate.getId())).willReturn(bookToUpdate);
+        Mockito.when(bookService.updateBook(Mockito.any(Book.class), Mockito.any(Long.class))).thenReturn(bookToUpdate);
 
         ResultActions response = mockMvc.perform(put("/api/books/{id}", bookToUpdate.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(bookToUpdate)));
         response.andExpect(status().isOk())
-                .andDo(print());
-                //.andExpect(jsonPath("$.title", is(book.getTitle())))
-                //.andExpect(jsonPath("$.editorial", is(book.getEditorial())));
+                .andDo(print())
+                .andExpect(jsonPath("$.title", is(bookToUpdate.getTitle())))
+                .andExpect(jsonPath("$.editorial", is(bookToUpdate.getEditorial())));
     }
 
     @Test

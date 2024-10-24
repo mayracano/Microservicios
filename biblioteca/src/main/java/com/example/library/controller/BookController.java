@@ -2,8 +2,8 @@ package com.example.library.controller;
 
 import java.util.List;
 
-import com.example.library.service.BookService;
 import com.example.library.model.Book;
+import com.example.library.service.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,6 +45,7 @@ public class BookController {
 
     @PutMapping("{id}")
     public ResponseEntity<Book> updateUser(@PathVariable("id") long id, @RequestBody Book book) {
-        return new ResponseEntity<> (bookService.updateBook(book, id), HttpStatus.OK);
+        Book response = bookService.updateBook(book, id);
+        return new ResponseEntity<> (response, HttpStatus.OK);
     }
 }

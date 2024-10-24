@@ -22,7 +22,7 @@ import static org.mockito.Mockito.verify;
 public class BookServiceTest {
 
     @InjectMocks
-    private BookService bookService;
+    private BookServiceImpl bookServiceImpl;
 
     @Mock
     private BookRepository bookRepository;
@@ -51,7 +51,7 @@ public class BookServiceTest {
     @Test
     public void testCreateBook() {
         given(bookRepository.save(book)).willReturn(book);
-        Book savedBook = bookService.createBook(book);
+        Book savedBook = bookServiceImpl.createBook(book);
         System.out.println(savedBook);
         assertThat(savedBook).isNotNull();
     }
@@ -59,7 +59,7 @@ public class BookServiceTest {
     @Test
     public void getAllUsers() {
         given(bookRepository.findAll()).willReturn(List.of(book, book2));
-        List<Book> bookList = bookService.getAllBooks();
+        List<Book> bookList = bookServiceImpl.getAllBooks();
         assertThat(bookList).isNotNull();
         assertThat(bookList.size()).isGreaterThan(1);
     }
@@ -67,7 +67,7 @@ public class BookServiceTest {
     @Test
     public void getUserById() {
         given(bookRepository.findById(1L)).willReturn(Optional.of(book));
-        Book existingBook = bookService.getBookById(book.getId());
+        Book existingBook = bookServiceImpl.getBookById(book.getId());
         assertThat(existingBook).isNotNull();
     }
 
@@ -75,7 +75,7 @@ public class BookServiceTest {
     public void deleteBook() {
         given(bookRepository.findById(book.getId())).willReturn(Optional.of(book));
         willDoNothing().given(bookRepository).deleteById(book.getId());
-        bookService.deleteBook(book.getId());
+        bookServiceImpl.deleteBook(book.getId());
         verify(bookRepository, times(1)).deleteById(book.getId());
     }
 
@@ -88,7 +88,7 @@ public class BookServiceTest {
         book2Update.setAuthor("Author Name ");
         book2Update.setEditorial("Editorial 2");
         book2Update.setIsbn("1234567898");
-        Book bookUpdated =  bookService.updateBook(book2Update, book.getId());
+        Book bookUpdated =  bookServiceImpl.updateBook(book2Update, book.getId());
         assertThat(bookUpdated.getTitle()).isEqualTo("new title");
     }
 }

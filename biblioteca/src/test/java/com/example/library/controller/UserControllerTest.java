@@ -8,6 +8,7 @@ import com.example.library.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -18,7 +19,6 @@ import org.springframework.test.web.servlet.ResultActions;
 import static org.hamcrest.CoreMatchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -112,15 +112,15 @@ public class UserControllerTest {
         userToUpdate.setFirstName("Max");
         userToUpdate.setEmail("max@gmail.com");
 
-        given(userService.updateUser(userToUpdate,userToUpdate.getId())).willReturn(userToUpdate);
+        Mockito.when(userService.updateUser(Mockito.any(User.class), Mockito.any(Long.class))).thenReturn(userToUpdate);
 
         ResultActions response = mockMvc.perform(put("/api/users/{id}", userToUpdate.getId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(userToUpdate)));
         response.andExpect(status().isOk())
-                .andDo(print());
-                //.andExpect(jsonPath("$.firstName", is(userToUpdate.getFirstName())))
-                //.andExpect(jsonPath("$.email", is(userToUpdate.getEmail())));
+                .andDo(print())
+                .andExpect(jsonPath("$.firstName", is(userToUpdate.getFirstName())))
+                .andExpect(jsonPath("$.email", is(userToUpdate.getEmail())));
     }
 
     @Test

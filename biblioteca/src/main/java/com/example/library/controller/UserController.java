@@ -2,8 +2,8 @@ package com.example.library.controller;
 
 import java.util.List;
 
-import com.example.library.service.UserService;
 import com.example.library.model.User;
+import com.example.library.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
