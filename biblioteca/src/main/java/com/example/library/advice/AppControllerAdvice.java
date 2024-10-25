@@ -41,7 +41,7 @@ public class AppControllerAdvice {
 
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<Map<String, List<String>>> handleValidationErrors(ConstraintViolationException ex) {
+    public ResponseEntity<Map<String, List<String>>> handleConstraintValidationErrors(ConstraintViolationException ex) {
         List<String> errors = ex.getConstraintViolations()
                 .stream().map(ConstraintViolation::getMessage).collect(Collectors.toList());
         return new ResponseEntity<>(getErrorsMap(errors), new HttpHeaders(), HttpStatus.BAD_REQUEST);

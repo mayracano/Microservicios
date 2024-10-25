@@ -52,7 +52,6 @@ public class UserServiceImplTest {
     public void testCreateUser() {
         given(userRepository.save(user)).willReturn(user);
         User savedUser = userService.createUser(user);
-        System.out.println(savedUser);
         assertThat(savedUser).isNotNull();
     }
 
