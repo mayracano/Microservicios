@@ -12,7 +12,7 @@
 	<artifactId>Library</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Library</name>
-	<description>entrevista microservicio dominio</description>
+	<description>Library Microservice</description>
 	<url/>
 	<licenses>
 		<license/>
