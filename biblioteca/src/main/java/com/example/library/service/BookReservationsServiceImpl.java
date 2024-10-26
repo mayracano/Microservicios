@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import com.example.library.dto.BookReservationDTO;
 import com.example.library.model.BookReservation;
 import com.example.library.repository.BookRepository;
 import com.example.library.repository.BookReservationsRepository;
@@ -25,9 +26,9 @@ public class BookReservationsServiceImpl implements BookReservationsService {
     private BookRepository bookRepository;
 
     @Override
-    public BookReservation reserveBook(BookReservation bookReservation) {
-        Long userId = bookReservation.getUserId();
-        Long bookId = bookReservation.getBookId();
+    public BookReservation reserveBook(BookReservationDTO bookReservationDTO) {
+        Long userId = bookReservationDTO.getUserId();
+        Long bookId = bookReservationDTO.getBookId();
         validateUser(userId);
         validateBook(bookId);
 
@@ -45,9 +46,9 @@ public class BookReservationsServiceImpl implements BookReservationsService {
     }
 
     @Override
-    public void removeBookReservation(BookReservation bookReservation) {
-        Long userId = bookReservation.getUserId();
-        Long bookId = bookReservation.getBookId();
+    public void removeBookReservation(BookReservationDTO bookReservationDTO) {
+        Long userId = bookReservationDTO.getUserId();
+        Long bookId = bookReservationDTO.getBookId();
         validateUser(userId);
         validateBook(bookId);
 

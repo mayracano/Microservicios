@@ -2,39 +2,61 @@ package com.example.library.controller;
 
 import java.util.List;
 
+import com.example.library.dto.BookReservationDTO;
+import com.example.library.dto.BookReservationEvent;
+import com.example.library.dto.BookReservationStatus;
 import com.example.library.model.BookReservation;
 import com.example.library.service.BookReservationsService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
-@RestController
-@RequestMapping("api/reservations/")
+@Controller
 public class BookReservationController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BookReservationController.class);
 
     @Autowired
     private BookReservationsService bookReservationsService;
 
-    @PostMapping
-    public ResponseEntity<BookReservation> createReservation(@RequestBody BookReservation bookReservation) {
-        return new ResponseEntity<>(bookReservationsService.reserveBook(bookReservation), HttpStatus.CREATED);
+    @Autowired
+    KafkaTemplate<String, BookReservationEvent> kafkaTemplate;
+
+    @KafkaListener(topics = "new-reservation", groupId = "reservations-group")
+    public void createReservation(String event) throws Exception {
+        BookReservationEvent bookReservationEvent = new ObjectMapper()
+                .readValue(event, BookReservationEvent.class);
+
+        LOGGER.info(String.format("Received 'new-reservation', operation to register a Book reservation for for user: %s and book: %s", bookReservationEvent.getBookReservation().getBookId(), bookReservationEvent.getBookReservation().getUserId()));
+        BookReservationDTO bookReservationDTO = bookReservationEvent.getBookReservation();
+
+        BookReservationEvent bookReservationCompleteEvent = new BookReservationEvent();
+        bookReservationCompleteEvent.setBookReservation(bookReservationDTO);
+
+        try {
+            BookReservation bookReservation = bookReservationsService.reserveBook(bookReservationDTO);
+            bookReservationDTO.setId(bookReservation.getId());
+            bookReservationCompleteEvent.setBookReservationStatus(BookReservationStatus.CREATED);
+            kafkaTemplate.send("completed-reservations", bookReservationCompleteEvent);
+            LOGGER.info(String.format("Sent 'completed-reservations' for user: %s and book: %s", bookReservationDTO.getBookId(), bookReservationDTO.getUserId()));
+        } catch(Exception e) {
+            bookReservationCompleteEvent.setBookReservationStatus(BookReservationStatus.REVERSED);
+            kafkaTemplate.send("reversed-reservations-failed", bookReservationEvent);
+            LOGGER.info(String.format("Sent 'reversed-reservations-failed' for user: %s and book: %s", bookReservationDTO.getBookId(), bookReservationDTO.getUserId()));
+        }
     }
 
-    @DeleteMapping
-    public ResponseEntity<String> removeBookReservation(@RequestBody BookReservation bookReservation) {
-        bookReservationsService.removeBookReservation(bookReservation);
-        return new ResponseEntity<>("Book Reservation Removed", HttpStatus.OK);
+    public void removeBookReservation(@RequestBody BookReservationDTO bookReservationDTO) {
+        bookReservationsService.removeBookReservation(bookReservationDTO);
     }
 
-    @GetMapping("{id}")
-    public List<BookReservation>  getUserBookReservations(@PathVariable("id") Long userId) {
+    public List<BookReservation> getUserBookReservations(@PathVariable("id") Long userId) {
         return bookReservationsService.getUserBookReservations(userId);
     }
 }
