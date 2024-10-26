@@ -1,12 +1,11 @@
 package com.example.library.service;
 
-import java.util.Optional;
-
 import com.example.library.dto.BookReservationEvent;
-import com.example.library.model.BookReservation;
 import com.example.library.repository.BookReservationsRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Controller;
@@ -14,15 +13,19 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class ReverseReservation {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReverseReservation.class);
+
     @Autowired
     private BookReservationsRepository bookReservationsRepository;
 
-    @KafkaListener(topics = "reverse-reservations", groupId = "reservations-group")
+    @KafkaListener(topics = "reversed-reservations", groupId = "reservations-group")
     public void reverseReservation(String event) {
         try {
             BookReservationEvent bookReservationEvent = new ObjectMapper().readValue(event, BookReservationEvent.class);
-            Optional<BookReservation> bookReservationOptional = bookReservationsRepository.findById(bookReservationEvent.getBookReservation().getId());
-            bookReservationOptional.ifPresent(bookReservation -> bookReservationsRepository.delete(bookReservation));
+
+            LOGGER.info(String.format("Received 'reversed-reservations', operation to reverse the register a Book reservation for for user: %s and book: %s", bookReservationEvent.getBookReservation().getBookId(), bookReservationEvent.getBookReservation().getUserId()));
+            bookReservationsRepository.findByUserIdAndBookId(bookReservationEvent.getBookReservation().getUserId(), bookReservationEvent.getBookReservation().getUserId())
+                    .ifPresent(bookReservation -> bookReservationsRepository.delete(bookReservation));
             //TODO: manage states on reservations instead of deleting them
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);

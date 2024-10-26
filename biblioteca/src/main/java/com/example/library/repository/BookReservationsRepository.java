@@ -12,5 +12,6 @@ public interface BookReservationsRepository extends JpaRepository<BookReservatio
 
     Optional<List<BookReservation>> findByUserId(Long userId);
     Optional<List<BookReservation>> findByBookId(Long bookId);
+    Optional<BookReservation> findByUserIdAndBookId(Long userId, Long BookId);
 
 }
