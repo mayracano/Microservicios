@@ -1,3 +1,5 @@
+INSERT INTO users (first_name, last_name, email, phone_number)
+VALUES ('MyName', 'my lastName', 'myemail@gmail.com', '1234567890');
 INSERT INTO Books (title, isbn, editorial, author)
 VALUES ('Atomic Habits: An Easy & Proven Way to Build Good Habits & Break Bad Ones', '0735211299', 'Avery', 'James Clear');
 INSERT INTO Books (title, isbn, editorial, author)

@@ -2,11 +2,14 @@ package com.example.library.controller;
 
 import java.util.List;
 
+import com.example.library.dto.BookReservationEvent;
 import com.example.library.model.BookReservation;
+import com.example.library.model.BookReservationStatus;
 import com.example.library.service.BookReservationsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,9 +25,19 @@ public class BookReservationController {
     @Autowired
     private BookReservationsService bookReservationsService;
 
+    @Autowired
+    KafkaTemplate<String, BookReservationEvent> kafkaTemplate;
+
     @PostMapping
-    public ResponseEntity<BookReservation> createReservation(@RequestBody BookReservation bookReservation) {
-        return new ResponseEntity<>(bookReservationsService.reserveBook(bookReservation), HttpStatus.CREATED);
+    public ResponseEntity<BookReservation> createReservation(@RequestBody BookReservation bookReservationData) {
+        BookReservation bookReservation = bookReservationsService.reserveBook(bookReservationData);
+
+        BookReservationEvent bookReservationEvent = new BookReservationEvent();
+        bookReservationEvent.setBookReservation(bookReservation);
+        bookReservationEvent.setBookReservationStatus(BookReservationStatus.CREATED);
+        kafkaTemplate.send("new-reservation", bookReservationEvent);
+
+        return new ResponseEntity<>(bookReservation, HttpStatus.CREATED);
     }
 
     @DeleteMapping
