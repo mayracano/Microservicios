@@ -2,7 +2,6 @@ package com.example.library.service;
 
 import java.util.Optional;
 
-import com.example.library.controller.BookReservationController;
 import com.example.library.dto.BookReservationEvent;
 import com.example.library.model.BookReservation;
 import com.example.library.repository.BookReservationsRepository;
@@ -17,7 +16,7 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class CompleteReservation {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(BookReservationController.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CompleteReservation.class);
 
     @Autowired
     private BookReservationsRepository bookReservationsRepository;

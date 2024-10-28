@@ -6,6 +6,9 @@ import com.example.library.dto.BookReservationDTO;
 import com.example.library.model.BookReservation;
 
 public interface BookReservationsService {
+
+    void createReservation(String event) throws Exception;
+
     BookReservation reserveBook(BookReservationDTO bookReservationDTO);
 
     void removeBookReservation(BookReservationDTO bookReservationDTO);
