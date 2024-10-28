@@ -1,6 +1,9 @@
 package com.example.library.service;
 
+import java.util.Optional;
+
 import com.example.library.dto.BookReservationEvent;
+import com.example.library.model.BookReservation;
 import com.example.library.repository.BookReservationsRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,8 +28,8 @@ public class ReverseReservation {
             BookReservationEvent bookReservationEvent = new ObjectMapper().readValue(event, BookReservationEvent.class);
 
             LOGGER.info(String.format("Received 'reversed-reservations', operation to reverse the register a Book reservation for for user: %s and book: %s", bookReservationEvent.getBookReservation().getBookId(), bookReservationEvent.getBookReservation().getUserId()));
-            bookReservationsRepository.findByUserIdAndBookId(bookReservationEvent.getBookReservation().getUserId(), bookReservationEvent.getBookReservation().getUserId())
-                    .ifPresent(bookReservation -> bookReservationsRepository.delete(bookReservation));
+            Optional<BookReservation> OptionalReservation = bookReservationsRepository.findByUserIdAndBookId(bookReservationEvent.getBookReservation().getUserId(), bookReservationEvent.getBookReservation().getBookId());
+            OptionalReservation.ifPresent(bookReservation -> bookReservationsRepository.delete(bookReservation));
             //TODO: manage states on reservations instead of deleting them
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);

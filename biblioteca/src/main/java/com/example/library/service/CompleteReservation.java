@@ -22,12 +22,12 @@ public class CompleteReservation {
     @Autowired
     private BookReservationsRepository bookReservationsRepository;
 
-    @KafkaListener(topics = "completed-reservations", groupId = "reservations-group")
+    @KafkaListener(topics = "completed-reservations-ok", groupId = "reservations-group")
     public void completeReservation(String event) {
         try {
             BookReservationEvent bookReservationEvent = new ObjectMapper().readValue(event, BookReservationEvent.class);
 
-            LOGGER.info(String.format("Received 'completed-reservations', operation to complete a Book reservation for for user: %s and book: %s", bookReservationEvent.getBookReservation().getBookId(), bookReservationEvent.getBookReservation().getUserId()));
+            LOGGER.info(String.format("Received 'completed-reservations-ok', operation to complete a Book reservation for for user: %s and book: %s", bookReservationEvent.getBookReservation().getBookId(), bookReservationEvent.getBookReservation().getUserId()));
             Optional<BookReservation> bookReservationOptional = bookReservationsRepository.findById(bookReservationEvent.getBookReservation().getId());
             bookReservationOptional.ifPresent(bookReservation -> {
                 //TODO: manage state on reservations

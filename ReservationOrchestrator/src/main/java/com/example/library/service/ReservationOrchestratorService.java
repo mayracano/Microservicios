@@ -1,5 +1,7 @@
 package com.example.library.service;
 
+import java.util.Optional;
+
 import com.example.library.dto.BookReservationDTO;
 import com.example.library.dto.BookReservationEvent;
 import com.example.library.dto.BookReservationStatus;
@@ -31,38 +33,50 @@ public class ReservationOrchestratorService {
         removeFromInventory(bookReservationDTO);
     }
 
-    @KafkaListener(topics = "reversed-reservations-failed", groupId = "reservations-group")
+    @KafkaListener(topics = "new-reservation-failed", groupId = "reservations-group")
     public void reverseAddReservation(String event) throws Exception {
         BookReservationEvent bookReservationEvent = new ObjectMapper().readValue(event, BookReservationEvent.class);
-        LOGGER.info(String.format("Received 'reversed-reservations-failed', operation to register a Book reservation Failed for for user: %s and book: %s", bookReservationEvent.getBookReservation().getBookId(), bookReservationEvent.getBookReservation().getUserId()));
-        kafkaTemplate.send("reversed-inventory", bookReservationEvent);
+        LOGGER.info(String.format("Received 'new-reservation-failed', operation to register a Book reservation Failed for for user: %s and book: %s", bookReservationEvent.getBookReservation().getBookId(), bookReservationEvent.getBookReservation().getUserId()));
         reservationRepository.findById(bookReservationEvent.getBookReservation().getId())
                 .ifPresent(this::updateReservationStatusFailed);
+        kafkaTemplate.send("reversed-inventory", bookReservationEvent);
+        LOGGER.info(String.format("Sent 'reversed-inventory' for user: %s and book: %s", bookReservationEvent.getBookReservation().getBookId(), bookReservationEvent.getBookReservation().getUserId()));
     }
 
-    @KafkaListener(topics = "completed-reservations", groupId = "reservations-group")
+    @KafkaListener(topics = "completed-reservation", groupId = "reservations-group")
     public void completeReservation(String event) throws Exception {
         BookReservationEvent bookReservationEvent = new ObjectMapper().readValue(event, BookReservationEvent.class);
-        LOGGER.info(String.format("Received 'completed-reservations', operation to register Book Reservation Completed for: %s and book %s", bookReservationEvent.getBookReservation().getBookId(), bookReservationEvent.getBookReservation().getUserId()));
-        reservationRepository.findById(bookReservationEvent.getBookReservation().getId())
-                .ifPresent(this::updateReservationStatusOK);
+        LOGGER.info(String.format("Received 'completed-reservation', operation to register Book Reservation Completed for: %s and book %s", bookReservationEvent.getBookReservation().getBookId(), bookReservationEvent.getBookReservation().getUserId()));
+        completeStatus(bookReservationEvent);
     }
 
     @KafkaListener(topics = "removed-inventory-failed", groupId = "reservations-group")
     public void reverseInventory(String event) throws Exception {
         BookReservationEvent bookReservationEvent = new ObjectMapper().readValue(event, BookReservationEvent.class);
         LOGGER.info(String.format("Received 'removed-inventory-failed', operation to remove book from inventory Failed for: %s and book %s", bookReservationEvent.getBookReservation().getBookId(), bookReservationEvent.getBookReservation().getUserId()));
-        kafkaTemplate.send("reversed-reservations", bookReservationEvent);
         reservationRepository.findById(bookReservationEvent.getBookReservation().getId())
                 .ifPresent(this::updateReservationStatusFailed);
+        kafkaTemplate.send("reversed-reservations", bookReservationEvent);
+        LOGGER.info(String.format("Sent 'reversed-reservations' for user: %s and book: %s", bookReservationEvent.getBookReservation().getBookId(), bookReservationEvent.getBookReservation().getUserId()));
     }
 
     @KafkaListener(topics = "completed-inventory", groupId = "reservations-group")
     public void completeInventory(String event) throws Exception {
         BookReservationEvent bookReservationEvent = new ObjectMapper().readValue(event, BookReservationEvent.class);
         LOGGER.info(String.format("Received 'completed-inventory', operation to complete the book reservation for: %s and book %s", bookReservationEvent.getBookReservation().getBookId(), bookReservationEvent.getBookReservation().getUserId()));
-        reservationRepository.findById(bookReservationEvent.getBookReservation().getId())
-                .ifPresent(this::updateReservationStatusOK);
+        completeStatus(bookReservationEvent);
+    }
+
+    private void completeStatus(BookReservationEvent bookReservationEvent) {
+        Optional<BookReservation> optionalBookReservation = reservationRepository.findById(bookReservationEvent.getBookReservation().getId());
+        if (optionalBookReservation.isPresent()) {
+            BookReservation bookReservation = optionalBookReservation.get();
+            updateReservationStatusOK(bookReservation);
+            if (bookReservation.getReservationStatus().equals(BookReservationStatus.COMPLETED)) {
+                kafkaTemplate.send("completed-reservations-ok", bookReservationEvent);
+                LOGGER.info(String.format("Sent 'completed-reservations-ok' for user: %s and book: %s", bookReservationEvent.getBookReservation().getBookId(), bookReservationEvent.getBookReservation().getUserId()));
+            }
+        }
     }
 
     private void removeFromInventory(BookReservationDTO bookReservationDTO) {
@@ -99,10 +113,9 @@ public class ReservationOrchestratorService {
     }
 
     private void updateReservationStatusFailed(BookReservation bookReservation) {
-        if (bookReservation.getReservationStatus().equals(BookReservationStatus.PENDING)) {
+        if (bookReservation.getReservationStatus().equals(BookReservationStatus.PENDING)
+        || bookReservation.getReservationStatus().equals(BookReservationStatus.CREATED)) {
             bookReservation.setReservationStatus(BookReservationStatus.REVERSED);
-        } else if (bookReservation.getReservationStatus().equals(BookReservationStatus.REVERSED)) {
-            bookReservation.setReservationStatus(BookReservationStatus.CANCELLED);
         }
         reservationRepository.save(bookReservation);
     }

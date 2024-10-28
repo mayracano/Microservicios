@@ -52,12 +52,13 @@ public class BookReservationsServiceImpl implements BookReservationsService {
             BookReservation bookReservation = reserveBook(bookReservationDTO);
             bookReservationDTO.setId(bookReservation.getId());
             bookReservationCompleteEvent.setBookReservationStatus(BookReservationStatus.CREATED);
-            kafkaTemplate.send("completed-reservations", bookReservationCompleteEvent);
-            LOGGER.info(String.format("Sent 'completed-reservations' for user: %s and book: %s", bookReservationDTO.getBookId(), bookReservationDTO.getUserId()));
+            kafkaTemplate.send("completed-reservation", bookReservationCompleteEvent);
+            LOGGER.info(String.format("Sent 'completed-reservation' for user: %s and book: %s", bookReservationDTO.getBookId(), bookReservationDTO.getUserId()));
         } catch(Exception e) {
+            LOGGER.info(e.getMessage());
             bookReservationCompleteEvent.setBookReservationStatus(BookReservationStatus.REVERSED);
-            kafkaTemplate.send("reversed-reservations-failed", bookReservationEvent);
-            LOGGER.info(String.format("Sent 'reversed-reservations-failed' for user: %s and book: %s", bookReservationDTO.getBookId(), bookReservationDTO.getUserId()));
+            kafkaTemplate.send("new-reservation-failed", bookReservationEvent);
+            LOGGER.info(String.format("Sent 'new-reservation-failed' for user: %s and book: %s", bookReservationDTO.getBookId(), bookReservationDTO.getUserId()));
         }
     }
 
