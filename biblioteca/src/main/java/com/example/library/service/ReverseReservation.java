@@ -29,11 +29,14 @@ public class ReverseReservation {
 
             LOGGER.info(String.format("Received 'reversed-reservations', operation to reverse the register a Book reservation for for user: %s and book: %s", bookReservationEvent.getBookReservation().getBookId(), bookReservationEvent.getBookReservation().getUserId()));
             Optional<BookReservation> OptionalReservation = bookReservationsRepository.findByUserIdAndBookId(bookReservationEvent.getBookReservation().getUserId(), bookReservationEvent.getBookReservation().getBookId());
-            OptionalReservation.ifPresent(bookReservation -> bookReservationsRepository.delete(bookReservation));
+            OptionalReservation.ifPresent(bookReservation -> {
+                LOGGER.info(String.format("Book reservation would be deleted for user: %s and book: %s", bookReservationEvent.getBookReservation().getBookId(), bookReservationEvent.getBookReservation().getUserId()));
+                bookReservationsRepository.delete(bookReservation);
+            });
             //TODO: manage states on reservations instead of deleting them
         } catch (JsonProcessingException e) {
+            LOGGER.info(String.format("Exception while reversing reservation  %s", e.getMessage()));
             throw new RuntimeException(e);
-            //TODO: Exceptions handling
         }
     }
 }

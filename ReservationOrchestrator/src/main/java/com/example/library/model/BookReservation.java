@@ -1,5 +1,6 @@
 package com.example.library.model;
 
+import com.example.library.dto.BookInventoryStatus;
 import com.example.library.dto.BookReservationStatus;
 
 import jakarta.persistence.Entity;
@@ -24,4 +25,5 @@ public class BookReservation {
     private Long bookId;
     private Long userId;
     private BookReservationStatus reservationStatus;
+    private BookInventoryStatus inventoryStatus;
 }

@@ -52,8 +52,11 @@ public class BookReservationsServiceImpl implements BookReservationsService {
             BookReservation bookReservation = reserveBook(bookReservationDTO);
             bookReservationDTO.setId(bookReservation.getId());
             bookReservationCompleteEvent.setBookReservationStatus(BookReservationStatus.CREATED);
-            kafkaTemplate.send("completed-reservation", bookReservationCompleteEvent);
-            LOGGER.info(String.format("Sent 'completed-reservation' for user: %s and book: %s", bookReservationDTO.getBookId(), bookReservationDTO.getUserId()));
+            Optional<BookReservation> optionalReservation = bookReservationsRepository.findByUserIdAndBookId(bookReservationEvent.getBookReservation().getUserId(), bookReservationEvent.getBookReservation().getBookId());
+            if (optionalReservation.isPresent()) {
+                kafkaTemplate.send("completed-reservation", bookReservationCompleteEvent);
+                LOGGER.info(String.format("Sent 'completed-reservation' for user: %s and book: %s", bookReservationDTO.getBookId(), bookReservationDTO.getUserId()));
+            }
         } catch(Exception e) {
             LOGGER.info(e.getMessage());
             bookReservationCompleteEvent.setBookReservationStatus(BookReservationStatus.REVERSED);

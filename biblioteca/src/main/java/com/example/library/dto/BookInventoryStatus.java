@@ -1,8 +1,9 @@
 package com.example.library.dto;
 
-public enum BookReservationStatus {
-    CREATED,
+public enum BookInventoryStatus {
+    ADDED,
     FAILED,
     PENDING,
+    REMOVED,
     REVERSED
 }
